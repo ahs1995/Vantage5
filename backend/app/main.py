@@ -2,11 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app import models
-from app.routers import surveys
+from app.routers import surveys, submissions
+
+
+
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Video Survey API", version="1.0.0")
+
+app.include_router(submissions.router, prefix="/api/submissions", tags=["submissions"])
 
 app.add_middleware(
     CORSMiddleware,
