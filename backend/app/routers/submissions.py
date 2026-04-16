@@ -1,3 +1,5 @@
+import json, zipfile, shutil, uuid
+from fastapi.responses import FileResponse
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import func
@@ -129,3 +131,76 @@ def complete_submission(submission_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(submission)
     return submission
+
+
+@router.get("/{submission_id}/export")
+def export_submission(submission_id: int, db: Session = Depends(get_db)):
+    submission = (
+        db.query(models.SurveySubmission)
+        .options(
+            joinedload(models.SurveySubmission.answers).joinedload(models.SurveyAnswer.question)
+        )
+        .filter(models.SurveySubmission.id == submission_id)
+        .first()
+    )
+    if not submission:
+        raise HTTPException(status_code=404, detail="Submission not found")
+
+    # Build responses list
+    responses = []
+    for answer in submission.answers:
+        responses.append({
+            "question": answer.question.question_text,
+            "answer": answer.answer,
+            "face_detected": answer.face_detected,
+            "score": answer.face_score,
+            "face_image": answer.face_image_path,
+        })
+
+    metadata = {
+        "submission_id": str(submission.id),
+        "survey_id": str(submission.survey_id),
+        "started_at": submission.started_at.isoformat() if submission.started_at else None,
+        "completed_at": submission.completed_at.isoformat() if submission.completed_at else None,
+        "ip_address": submission.ip_address,
+        "device": submission.device,
+        "browser": submission.browser,
+        "os": submission.os,
+        "location": submission.location,
+        "responses": responses,
+        "overall_score": submission.overall_score,
+    }
+
+    # Create temp folder for ZIP contents
+    tmp_dir = f"/tmp/export_{submission_id}_{uuid.uuid4().hex}"
+    images_dir = os.path.join(tmp_dir, "images")
+    os.makedirs(images_dir, exist_ok=True)
+
+    # Write metadata.json
+    with open(os.path.join(tmp_dir, "metadata.json"), "w") as f:
+        json.dump(metadata, f, indent=2)
+
+    # Copy face images
+    for i, answer in enumerate(submission.answers, start=1):
+        if answer.face_image_path:
+            src = os.path.join(MEDIA_DIR, answer.face_image_path)
+            if os.path.exists(src):
+                ext = answer.face_image_path.split(".")[-1]
+                shutil.copy(src, os.path.join(images_dir, f"q{i}_face.{ext}"))
+
+    # Create ZIP
+    zip_path = f"/tmp/submission_{submission_id}.zip"
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for root, _, files in os.walk(tmp_dir):
+            for file in files:
+                full_path = os.path.join(root, file)
+                arcname = os.path.relpath(full_path, tmp_dir)
+                zf.write(full_path, arcname)
+
+    shutil.rmtree(tmp_dir)
+
+    return FileResponse(
+        zip_path,
+        media_type="application/zip",
+        filename=f"submission_{submission_id}.zip",
+    )
