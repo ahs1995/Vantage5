@@ -14,6 +14,13 @@ let modelsLoaded = false;
 async function loadModels() {
   if (modelsLoaded) return;
   const faceapi = await import("@vladmandic/face-api");
+
+  // Force CPU backend since WebGL may not be available
+  const tf = await import("@tensorflow/tfjs-core");
+  await import("@tensorflow/tfjs-backend-cpu");
+  await tf.setBackend("cpu");
+  await tf.ready();
+
   const MODEL_URL = "/models";
   await Promise.all([
     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
