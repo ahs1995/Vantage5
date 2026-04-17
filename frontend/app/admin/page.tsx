@@ -70,8 +70,10 @@ export default function AdminPage() {
       setTitle("");
       setQuestions([...EMPTY_QUESTIONS]);
       fetchSurveys();
-    } catch (err: any) {
-      const detail = err?.response?.data?.detail || "Something went wrong.";
+    } catch (err: unknown) {
+      const detail =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail || "Something went wrong.";
       setMessage({ type: "error", text: detail });
     } finally {
       setLoading(false);

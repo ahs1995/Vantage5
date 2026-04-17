@@ -37,10 +37,12 @@ export default function CameraFeed({
     return () => {
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     onStatusChange(status, score);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, score]);
 
   async function startCamera() {
