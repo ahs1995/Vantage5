@@ -225,7 +225,7 @@ export default function SurveyPage() {
           <p className="text-gray-500">Your responses have been recorded.</p>
           {submissionId && (
             <a
-              href={`http://localhost:8000/api/submissions/${submissionId}/export`}
+              href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/submissions/${submissionId}/export`}
               className="inline-block mt-4 text-sm text-blue-600 hover:underline"
             >
               Download session export (ZIP)
