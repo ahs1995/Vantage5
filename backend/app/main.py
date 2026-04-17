@@ -16,6 +16,7 @@ app.add_middleware(
         allow_origins=[
         "http://localhost:3000",
         "https://vantage5.onrender.com",
+        "https://vantage5-survey.netlify.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
