@@ -65,7 +65,13 @@ export function useFaceDetection(videoRef: React.RefObject<HTMLVideoElement>) {
       try {
         const faceapi = await import("@vladmandic/face-api");
         const detections = await faceapi
-          .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+          .detectAllFaces(
+            video,
+            new faceapi.TinyFaceDetectorOptions({
+              inputSize: 320,
+              scoreThreshold: 0.2,
+            }),
+          )
           .withFaceLandmarks(true);
 
         if (detections.length === 0) {
