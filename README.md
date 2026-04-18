@@ -4,6 +4,14 @@ A privacy-first video survey platform where users complete a 5-question Yes/No s
 
 ---
 
+## Live Demo
+
+Frontend: https://vantage5-survey.netlify.app
+
+Admin Panel: https://vantage5-survey.netlify.app/admin
+
+Backend API Docs: https://vantage5.onrender.com/docs
+
 ## Tech Stack
 
 - Frontend: Next.js 14 (App Router), TypeScript, Tailwind CSS, @vladmandic/face-api
